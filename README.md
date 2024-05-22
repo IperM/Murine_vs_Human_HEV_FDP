@@ -1,4 +1,4 @@
-# Murine_vs_Human_HEV_FDP
+# Murine vs Human HEV FDP
 
 This Repository comprehends the different files that mount the whole pipeline. Inside this it is located 2 different folders,
 containing the appropiate **scripts**.
