@@ -408,7 +408,7 @@ def Bam_to_Sam(file_to_convert):
     return file_to_convert[:-4]+'.sam'
 
 
-def Sam_unmap(file_to_convert, BAM = False):
+def Sam_unmap(file_to_convert, BAM = False, Keep_Unmaped = False):
      
     #F in order to keep the mapped
     #f in order to keep the unmaped
@@ -421,6 +421,15 @@ def Sam_unmap(file_to_convert, BAM = False):
 
             runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
 
+    if Keep_Unmaped == True:
+        command = "samtools view -h -b -f 4 {}>{}_unmapped.bam".format(file_to_convert, file_to_convert[:-4])
+        print(command)
+
+        runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
+
+        return file_to_convert[:-4]+"_unmapped.bam"
+
+
     else:
         if file_to_convert[-4:] == ".sam":
 
@@ -431,6 +440,13 @@ def Sam_unmap(file_to_convert, BAM = False):
 
     return file_to_convert[:-4]+"_mapped.sam"
 
+def Sam_To_Fastq(file_to_convert):
+    command = "samtools bam2fq {}>{}_unmapped.fastq".format(file_to_convert, file_to_convert[:-4])
+    print(command)
+
+    runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
+
+    return file_to_convert[:-4]+".fastq"
 
 def Sam_sorting(file_to_sort, BAM = False):
     
@@ -732,6 +748,33 @@ def bam2plot(input_path, savepath):
         print(command)
         runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
 
+    return savepath
+
+
+def Feature_Counts(input_Path, savepath, annotated):
+
+    files = file_list(input_Path)[1:]
+
+    os.chdir(input_Path)
+
+    if annotated[:-3] == "gff" or annotated[:-4] == "gff3":
+        for file in files:
+    
+                #You must be carefull when using the tool, you will have to set it up the most accurate to the real tools
+                command = "featureCounts -T 8 -F GFF -t exon -a {} -g gene_id -o {} {}".format( annotated , savepath + '/' + file[:-4] + '_counts.csv', file)
+                print(command)
+                runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
+
+
+    else:
+        for file in files:
+ 
+            #You must be carefull when using the tool, you will have to set it up the most accurate to the real tools
+            command = "featureCounts -T 8 -F GTF-t exon -a {} -g gene_id -o {} {}".format( annotated , savepath + '/' + file[:-4] + '_counts.csv', file)
+            print(command)
+            runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
+
+    os.chdir("/mnt/Viro_Data/Mitarbeiter/Ian")
     return savepath
 
 
