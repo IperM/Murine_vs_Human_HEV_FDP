@@ -1,0 +1,231 @@
+---
+title: "Coverge_PPH_PHH"
+output: html_document
+date: "2024-03-25"
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+library(pheatmap)
+library(tidyverse)
+library(rtracklayer)
+library(GenomicFeatures)
+library(GenomicRanges)
+library("GenomicFeatures")
+library(Rsubread)
+library(UpSetR)
+library(clusterProfiler) # Not working in the actual moment
+library(biomaRt)
+library(edgeR)
+library(data.table)
+library(GGally)
+library("EnhancedVolcano")
+library(enrichplot)
+library(GOplot)
+library(patchwork)
+```
+
+### Load TXT files for human, refering to tables of coverage
+
+The reference places for S17 and other ORF in annotations are located at the following [link](https://www.ncbi.nlm.nih.gov/nuccore/HQ389543).
+
+```{r Putting the genome in a proper list}
+
+Gen_1 <- tribble(~"feature", ~"start", ~"end",
+                 "", 0, 21,
+                 "ORF1", 21, 5324,
+                 "", 5324, 5359,
+                 "ORF2", 5359, 7341)
+Gen_1_cols <- c("white", "aquamarine", "gold3")
+
+Gen_2 <- tribble(~"feature", ~"start", ~"end",
+                 "", 0, 2300,
+                 "S17", 2300, 2400,
+                 "", 2400, 5348,
+                 "ORF3", 5348, 5689,
+                 "", 5689, 7350)
+Gen_2_cols <- c("white", "#DC143C", "green")
+
+```
+
+
+```{r}
+setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Unmaped_Reads/Picard/Human/Coverage")
+
+New_counts <-list.files()
+
+
+for (file in New_counts) {
+  data <- fread(file)
+
+  parts <- strsplit(basename(file), "_")
+  extracted_name <- paste0("ID_", parts[[1]][3], "_Human")
+
+  data <- rename(data, c( "Genome" = "V1" ,"Coordinates" = "V2", "Depth" = "V3" ))
+  assign(extracted_name, data)
+  
+}
+
+
+
+g12<- ggplot() + geom_line( data = ID_3_Human ,aes(x= Coordinates, y = Depth, color = "ID_3_Human"), lwd = 0.7) +
+  geom_line(data = ID_4_Human ,aes(x= Coordinates, y = Depth , color = "ID_4_Human"), lwd = 0.7) +
+  geom_line(data = ID_15_Human, aes(x= Coordinates, y = Depth, color = "ID_15_Human"), lwd = 0.7) +
+  geom_line( data = ID_16_Human, aes(x= Coordinates, y = Depth, color = "ID_16_Human"), lwd = 0.7) +
+  geom_line(data = ID_27_Human, aes(x= Coordinates, y = Depth, color = "ID_27_Human"), lwd = 0.7) +
+  geom_line(data = ID_28_Human, aes(x= Coordinates, y = Depth, color = "ID_28_Human"), lwd = 0.7) +
+  theme_classic() + scale_color_manual(name = "Sample", values = c("ID_3_Human" = "limegreen",
+                                                                   "ID_4_Human" = "red",
+                                                                   "ID_15_Human" = "yellow",
+                                                                   "ID_16_Human" = "cornflowerblue",
+                                                                   "ID_27_Human" = "plum",
+                                                                   "ID_28_Human" = "#ff865b")) +
+    labs(title = "Coverage against p6 HEV genome p6 infected- Human data")
+
+
+feature_11 <- ggplot() + geom_rect(data = Gen_1, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_1, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_1_cols) +
+  scale_color_manual(values = Gen_1_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+feature_12 <- ggplot() + geom_rect(data = Gen_2, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_2, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_2_cols) +
+  scale_color_manual(values = Gen_2_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+ g12 / feature_11 / feature_12 + plot_layout(nrow = 3, heights = c(1, 0.1, 0.1))
+ 
+ 
+ 
+ #-----------------------------
+g12<- ggplot() + geom_line( data = ID_1_Human ,aes(x= Coordinates, y = Depth, color = "ID_1_Human"), lwd = 0.7) +
+  geom_line(data = ID_2_Human, aes(x= Coordinates, y = Depth , color = "ID_2_Human"), lwd = 0.7)+ 
+  geom_line(data = ID_13_Human, aes(x= Coordinates, y = Depth , color = "ID_13_Human"), lwd = 0.7) +
+  geom_line(data = ID_14_Human, aes(x= Coordinates, y = Depth, color = "ID_14_Human"), lwd = 0.7) + 
+  geom_line(data = ID_25_Human ,aes(x= Coordinates, y = Depth, color = "ID_25_Human"), lwd = 0.7) +
+  geom_line(data = ID_26_Human, aes(x= Coordinates, y = Depth, color = "ID_26_Human"), lwd = 0.7) +
+  theme_classic() + scale_color_manual(name = "Sample", values = c("ID_1_Human" = "#67e5c8",
+                                                                   "ID_2_Human" = "pink",
+                                                                   "ID_13_Human" = "purple",
+                                                                   "ID_14_Human" = "black",
+                                                                   "ID_25_Human" = "peru",
+                                                                   "ID_26_Human" = "lemonchiffon")) +
+    labs(title = "Coverage against p6 HEV genome Non-p6 Infected - Human data")
+
+
+feature_11 <- ggplot() + geom_rect(data = Gen_1, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_1, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_1_cols) +
+  scale_color_manual(values = Gen_1_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+feature_12 <- ggplot() + geom_rect(data = Gen_2, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_2, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_2_cols) +
+  scale_color_manual(values = Gen_2_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+ g12 / feature_11 / feature_12 + plot_layout(nrow = 3, heights = c(1, 0.1, 0.1))
+
+```
+
+
+
+```{r}
+setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Unmaped_Reads/Picard/Murine/Coverage")
+
+New_counts <-list.files()
+
+
+for (file in New_counts) {
+  data <- fread(file)
+
+  parts <- strsplit(basename(file), "_")
+  extracted_name <- paste0("ID_", parts[[1]][3], "_Murine")
+
+  data <- rename(data, c( "Genome" = "V1" ,"Coordinates" = "V2", "Depth" = "V3" ))
+  assign(extracted_name, data)
+  
+}
+
+
+g22 <- ggplot() + 
+  geom_line(data = ID_5_Murine, aes(x= Coordinates, y = Depth, color = "ID_5_Murine"), lwd = 0.7) +
+  geom_line(data = ID_6_Murine, aes(x= Coordinates, y = Depth, color = "ID_6_Murine"), lwd = 0.7) + 
+  geom_line(data = ID_7_Murine, aes(x= Coordinates, y = Depth, color = "ID_7_Murine"), lwd = 0.7) +
+  geom_line(data = ID_8_Murine, aes(x= Coordinates, y = Depth, color = "ID_8_Murine"), lwd = 0.7) +
+  geom_line(data = ID_9_Murine, aes(x= Coordinates, y = Depth, color = "ID_9_Murine"), lwd = 0.7) +
+  geom_line(data = ID_10_Murine, aes(x= Coordinates, y = Depth, color = "ID_10_Murine"), lwd = 0.7) + 
+  geom_line(data = ID_11_Murine, aes(x= Coordinates, y = Depth, color = "ID_11_Murine"), lwd = 0.7) +
+  geom_line(data = ID_12_Murine, aes(x= Coordinates, y = Depth, color = "ID_12_Murine"), lwd = 0.7) +
+  geom_line(data = ID_17_Murine, aes(x= Coordinates, y = Depth, color = "ID_17_Murine"), lwd = 0.7) +
+  geom_line(data = ID_18_Murine, aes(x= Coordinates, y = Depth, color = "ID_18_Murine"), lwd = 0.7) +
+  geom_line(data = ID_19_Murine, aes(x= Coordinates, y = Depth, color = "ID_19_Murine"), lwd = 0.7) +
+  geom_line(data = ID_20_Murine, aes(x= Coordinates, y = Depth, color = "ID_20_Murine"), lwd = 0.7) +
+  geom_line(data = ID_21_Murine, aes(x= Coordinates, y = Depth, color = "ID_21_Murine"), lwd = 0.7) +
+  geom_line(data = ID_22_Murine, aes(x= Coordinates, y = Depth, color = "ID_22_Murine"), lwd = 0.7) +
+  geom_line(data = ID_23_Murine, aes(x= Coordinates, y = Depth, color = "ID_23_Murine"), lwd = 0.7) +
+  geom_line(data = ID_24_Murine, aes(x= Coordinates, y = Depth, color = "ID_24_Murine"), lwd = 0.7) +
+  geom_line(data = ID_29_Murine, aes(x= Coordinates, y = Depth, color = "ID_29_Murine"), lwd = 0.7) +
+  geom_line(data = ID_30_Murine, aes(x= Coordinates, y = Depth, color = "ID_30_Murine"), lwd = 0.7) +
+  geom_line(data = ID_31_Murine, aes(x= Coordinates, y = Depth, color = "ID_31_Murine"), lwd = 0.7) +
+  geom_line(data = ID_32_Murine, aes(x= Coordinates, y = Depth, color = "ID_32_Murine"), lwd = 0.7) +
+  geom_line(data = ID_33_Murine, aes(x= Coordinates, y = Depth, color = "ID_33_Murine"), lwd = 0.7) +
+  geom_line(data = ID_34_Murine, aes(x= Coordinates, y = Depth, color = "ID_34_Murine"), lwd = 0.7) +
+  geom_line(data = ID_35_Murine, aes(x= Coordinates, y = Depth, color = "ID_35_Murine"), lwd = 0.7) +
+  geom_line(data = ID_36_Murine, aes(x= Coordinates, y = Depth, color = "ID_36_Murine"), lwd = 0.7) +
+  theme_classic() + 
+  scale_color_manual(name = "Sample", values = c("ID_5_Murine" = "#67e5c8",
+                                                 "ID_6_Murine" = "pink",
+                                                 "ID_7_Murine" = "limegreen",
+                                                 "ID_8_Murine" = "red",
+                                                 "ID_9_Murine" = "purple",
+                                                 "ID_10_Murine" = "black",
+                                                 "ID_11_Murine" = "yellow",
+                                                 "ID_12_Murine" = "cornflowerblue",
+                                                 "ID_17_Murine" = "peru",
+                                                 "ID_18_Murine" = "lemonchiffon",
+                                                 "ID_19_Murine" = "plum",
+                                                 "ID_20_Murine" = "honeydew4",
+                                                 "ID_21_Murine" = "slateblue2",
+                                                 "ID_22_Murine" = "orangered",
+                                                 "ID_23_Murine" = "hotpink",
+                                                 "ID_24_Murine" = "khaki4",
+                                                 "ID_29_Murine" = "chartreuse",
+                                                 "ID_30_Murine" = "dodgerblue",
+                                                 "ID_31_Murine" = "darkorange",
+                                                 "ID_32_Murine" = "deeppink",
+                                                 "ID_33_Murine" = "lightseagreen",
+                                                 "ID_34_Murine" = "mediumorchid",
+                                                 "ID_35_Murine" = "slategray",
+                                                 "ID_36_Murine" = "tan")) +
+  labs(title = "Coverage against p6 HEV genome - Murine data")
+
+
+feature_11 <- ggplot() + geom_rect(data = Gen_1, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_1, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_1_cols) +
+  scale_color_manual(values = Gen_1_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+feature_12 <- ggplot() + geom_rect(data = Gen_2, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
+                           fill =feature, color = feature))+
+  geom_text(data = Gen_2, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
+  scale_fill_manual(values = Gen_2_cols) +
+  scale_color_manual(values = Gen_2_cols) +
+  theme_void() + theme(legend.position = "none") 
+
+g22 / feature_11 / feature_12 + plot_layout(nrow = 3, heights = c(1, 0.1, 0.1))
+
+```
+
