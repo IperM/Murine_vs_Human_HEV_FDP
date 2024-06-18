@@ -16,6 +16,9 @@ This folder contains the current version of the files used for analyzing murine 
 - **CoverageCheck_v2.py**: A script that checks the coverage of samples against different reference genomes, with several examples provided.
 - **FC.sh**: A Bash script for running the FeatureCounts tool on an entire folder.
 - **retriver_adaptors.sh**: A Bash script that iterates over quality control files to extract overrepresented sequences and store them in a new file.
+- **Analysis_Murine_Human_Filtered_v3.Rmd**: Rmd script containing every visualization, DGEA, and GO analysis for human and murine samples.
+- **Coverage_Samples.Rmd**: Rmd script containing visualization of coverage plot coming from the mapping against p6 genome. Shows the coverage plots with an additional scheme of p6 genome down for recognizing where it's the coverage present.
+- **Counting_seq_Feature.py**: A troubleshooting script that allows for step-by-step execution of the pipeline, focusing on generating gene counts, through the usage of FeatureCounts.
 
 ## Main Functions
 
