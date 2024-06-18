@@ -1,0 +1,1328 @@
+---
+title: "Analysis_Murine_Human"
+author: "Ian Perez Medina"
+date: "2024-05-02"
+output: html_document
+---
+
+```{r Packages loading, echo=FALSE, include=FALSE}
+
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+library(pheatmap)
+library(tidyverse)
+library(rtracklayer)
+library(GenomicFeatures)
+library(GenomicRanges)
+library("GenomicFeatures")
+library(Rsubread)
+library(UpSetR)
+library(clusterProfiler) # Not working in the actual moment
+library(biomaRt)
+library(edgeR)
+library(data.table)
+library(GGally)
+library("EnhancedVolcano")
+library(enrichplot)
+library(stringr)
+library(ComplexHeatmap)
+library(org.Hs.eg.db)
+library(org.Mm.eg.db)
+library(ggvenn)
+library(GOplot)
+```
+
+
+```{r Aux.Func}
+
+RPKM_calc<- function(gtf_data, counts_data) {
+  # Extract exon lengths
+  exon_gtf <- gtf_data[gtf_data$type == "exon", ]
+  exon_lengths <- tapply(exon_gtf$end - exon_gtf$start + 1, exon_gtf$gene_id, sum)
+  exon_lengths_df <- data.frame(Gene = names(exon_lengths), Length = as.numeric(exon_lengths))
+  # Extract gene lengths
+  gene_lengths <- subset(exon_lengths_df, select = c(Gene, Length))
+  # Calculate RPKM values
+  gene_names <- rownames(counts_data)
+  col <- colnames(counts_data)
+  filtered_gene_length <- exon_lengths_df[exon_lengths_df$Gene %in% gene_names, ]
+  rpkm_df <- data.frame(matrix(0, nrow = nrow(counts_data), ncol = ncol(counts_data)))
+  rownames(rpkm_df) <- gene_names
+  colnames(rpkm_df) <- col
+  for (gene_name in gene_names) {
+    gene_counts <- counts_data[gene_name, ]
+    gene_length <- filtered_gene_length$Length[filtered_gene_length$Gene == gene_name]
+    rpkm_values <- (gene_counts * 1e9) / (gene_length * sum(gene_counts))
+    rpkm_df[gene_name, ] <- rpkm_values
+  }
+  return(rpkm_df)
+}
+
+
+```
+
+# Human Data
+
+If in any case it's missing some gff/gtf/fa thing go to this page. Here we will have different samples, but in this case we're more interested in 
+Murine samples and the Human samples of the release 111.
+
+$$http://ftp.ensembl.org/pub/release-111/$$
+
+```{r Data insertion Human}
+
+getwd()
+setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/")
+
+metadata <- read_excel("NicolaFrericks_Virologie_NF74_81_84_Metadata_MOD.xlsx")
+
+metadata <- metadata %>%
+  dplyr::select("Experiment", "Cell_line", "Epo", "Treatment", "ID")
+
+setwd(dir = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Htseq/Murine/")
+
+Murine_Counts <-list.files()[1:24]
+
+for (file in Murine_Counts) {
+  data <- fread(file, header = FALSE, sep = "\t")
+
+  parts <- strsplit(basename(file), "_")
+  extracted_name <- paste0("ID_", parts[[1]][3], "_Murine")
+
+
+  assign(extracted_name, data)
+
+}
+
+setwd(dir = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Htseq/Human/")
+
+Human_Counts <-list.files()[1:12]
+
+for (file in Human_Counts) {
+  data <- fread(file, header = FALSE, sep = "\t")
+
+  parts <- strsplit(basename(file), "_")
+  extracted_name <- paste0("ID_", parts[[1]][3], "_Human")
+
+
+  assign(extracted_name, data)
+
+}
+
+
+ID_1_Human<-ID_1_Human %>%
+  rename( "ID_1_Human" ="V2" )
+
+ID_2_Human<-ID_2_Human %>%
+  rename( "ID_2_Human" ="V2" )
+
+ID_3_Human<-ID_3_Human %>%
+  rename( "ID_3_Human" ="V2" )
+
+ID_4_Human<-ID_4_Human %>%
+  rename( "ID_4_Human" ="V2" )
+
+ID_13_Human<-ID_13_Human %>%
+  rename( "ID_13_Human" ="V2" )
+
+ID_14_Human<-ID_14_Human %>%
+  rename( "ID_14_Human" ="V2" )
+
+ID_15_Human<-ID_15_Human %>%
+  rename( "ID_15_Human" ="V2" )
+
+ID_16_Human<-ID_16_Human %>%
+  rename( "ID_16_Human" ="V2" )
+
+ID_25_Human<-ID_25_Human %>%
+  rename( "ID_25_Human" ="V2" )
+
+ID_26_Human<-ID_26_Human %>%
+  rename( "ID_26_Human" ="V2" )
+
+ID_27_Human<-ID_27_Human %>%
+  rename( "ID_27_Human" ="V2" )
+
+ID_28_Human<-ID_28_Human %>%
+  rename( "ID_28_Human" ="V2" )
+
+ID_5_Murine<-ID_5_Murine %>%
+  rename( "ID_5_Murine" ="V2" )
+
+ID_6_Murine<-ID_6_Murine %>%
+  rename( "ID_6_Murine" ="V2" )
+
+ID_7_Murine<-ID_7_Murine %>%
+  rename( "ID_7_Murine" ="V2" )
+
+ID_8_Murine<-ID_8_Murine %>%
+  rename( "ID_8_Murine" ="V2" )
+
+ID_9_Murine<-ID_9_Murine %>%
+  rename( "ID_9_Murine" ="V2" )
+
+ID_10_Murine<-ID_10_Murine %>%
+  rename( "ID_10_Murine" ="V2" )
+
+ID_11_Murine<-ID_11_Murine %>%
+  rename( "ID_11_Murine" ="V2" )
+
+ID_12_Murine<-ID_12_Murine %>%
+  rename( "ID_12_Murine" ="V2" )
+
+ID_17_Murine<-ID_17_Murine %>%
+  rename( "ID_17_Murine" ="V2" )
+
+ID_18_Murine<-ID_18_Murine %>%
+  rename( "ID_18_Murine" ="V2" )
+
+ID_19_Murine<-ID_19_Murine %>%
+  rename( "ID_19_Murine" ="V2" )
+
+ID_20_Murine<-ID_20_Murine %>%
+  rename( "ID_20_Murine" ="V2" )
+
+ID_21_Murine<-ID_21_Murine %>%
+  rename( "ID_21_Murine" ="V2" )
+
+ID_22_Murine<-ID_22_Murine %>%
+  rename( "ID_22_Murine" ="V2" )
+
+ID_23_Murine<-ID_23_Murine %>%
+  rename( "ID_23_Murine" ="V2" )
+
+ID_24_Murine<-ID_24_Murine %>%
+  rename( "ID_24_Murine" ="V2" )
+
+ID_29_Murine<-ID_29_Murine %>%
+  rename( "ID_29_Murine" ="V2" )
+
+ID_30_Murine<-ID_30_Murine %>%
+  rename( "ID_30_Murine" ="V2" )
+
+ID_31_Murine<-ID_31_Murine %>%
+  rename( "ID_31_Murine" ="V2" )
+
+ID_32_Murine<-ID_32_Murine %>%
+  rename( "ID_32_Murine" ="V2" )
+
+ID_33_Murine<-ID_33_Murine %>%
+  rename( "ID_33_Murine" ="V2" )
+
+ID_34_Murine<-ID_34_Murine %>%
+  rename( "ID_34_Murine" ="V2" )
+
+ID_35_Murine<-ID_35_Murine %>%
+  rename( "ID_35_Murine" ="V2" )
+
+ID_36_Murine<-ID_36_Murine %>%
+  rename( "ID_36_Murine" ="V2" )
+```
+
+
+Prepare the data table to work with, inside of it we will have the whole amount of information so we will
+be able to perform the analysis further on in a much more automatically way, adapt the overall data and 
+generate the metadata to work with DESeq2.
+
+
+```{r}
+
+SAMPLES_HUMAN <- ID_1_Human %>% 
+  dplyr::select(ID_1_Human)%>%
+  mutate( ID_2_Human = ID_2_Human$ID_2_Human,
+         ID_3_Human = ID_3_Human$ID_3_Human, ID_4_Human = ID_4_Human$ID_4_Human,
+         ID_13_Human = ID_13_Human$ID_13_Human, ID_14_Human = ID_14_Human$ID_14_Human,
+         ID_15_Human = ID_15_Human$ID_15_Human, ID_16_Human = ID_16_Human$ID_16_Human,
+         ID_25_Human = ID_25_Human$ID_25_Human, ID_26_Human = ID_26_Human$ID_26_Human,
+         ID_27_Human = ID_27_Human$ID_27_Human,ID_28_Human = ID_28_Human$ID_28_Human)
+
+
+SAMPLES_HUMAN <- data.frame(SAMPLES_HUMAN, row.names = ID_1_Human$V1)
+SAMPLES_HUMAN <- SAMPLES_HUMAN[1:(dim(SAMPLES_HUMAN)[1]-5),]
+
+
+SAMPLES_MURINE <- ID_5_Murine %>% 
+  dplyr::select(ID_5_Murine)%>%
+  mutate( ID_6_Murine = ID_6_Murine$ID_6_Murine,
+         ID_7_Murine = ID_7_Murine$ID_7_Murine, ID_8_Murine = ID_8_Murine$ID_8_Murine,
+         ID_9_Murine = ID_9_Murine$ID_9_Murine, ID_10_Murine = ID_10_Murine$ID_10_Murine,
+         ID_11_Murine = ID_11_Murine$ID_11_Murine, ID_12_Murine = ID_12_Murine$ID_12_Murine,
+         ID_17_Murine = ID_17_Murine$ID_17_Murine, ID_18_Murine = ID_18_Murine$ID_18_Murine,
+         ID_19_Murine = ID_19_Murine$ID_19_Murine,ID_20_Murine = ID_20_Murine$ID_20_Murine,
+         ID_21_Murine = ID_21_Murine$ID_21_Murine, ID_22_Murine = ID_22_Murine$ID_22_Murine,
+         ID_23_Murine = ID_23_Murine$ID_23_Murine,ID_24_Murine = ID_24_Murine$ID_24_Murine,
+         ID_29_Murine = ID_29_Murine$ID_29_Murine,ID_30_Murine = ID_30_Murine$ID_30_Murine,
+         ID_31_Murine = ID_31_Murine$ID_31_Murine, ID_32_Murine = ID_32_Murine$ID_32_Murine,
+         ID_33_Murine = ID_33_Murine$ID_33_Murine,ID_34_Murine = ID_34_Murine$ID_34_Murine,
+         ID_35_Murine = ID_35_Murine$ID_35_Murine,ID_36_Murine = ID_36_Murine$ID_36_Murine)
+
+
+
+
+SAMPLES_MURINE <- data.frame(SAMPLES_MURINE, row.names = ID_5_Murine$V1)
+SAMPLES_MURINE <- SAMPLES_MURINE[1:(dim(SAMPLES_MURINE)[1]-5),]
+
+
+Used_metadata <- metadata %>% 
+        mutate(Treatment =case_when(Treatment == "IFN alpa2b [100 IU/ml]" ~ "IFN_alpa2b",
+                                      Treatment == "Mock" ~ "Mock"))%>%
+        mutate(across(where(is.character),as.factor)) 
+
+Used_metadata_Human <- Used_metadata[grepl("HepG2", Used_metadata$Cell_line), ]
+
+Used_metadata_Murine <- Used_metadata[!(grepl("HepG2", Used_metadata$Cell_line)), ]
+
+```
+
+
+Now we will be importing the metadata, and the proper count files in order to do the analysis
+
+##DESeq2
+
+Use the data prepared with DESeq and then perform the analysis of the data, consider
+that the experimental design depending of the aim of the test. In this case we will look
+after the differences between control and test
+
+```{r Data Subsets}
+
+Metadata_tRNA_Human <- Used_metadata_Human[(grepl("Mock", Used_metadata_Human$Treatment)), ]
+Metadata_tRNA_Murine <- Used_metadata_Murine[(grepl("Mock", Used_metadata_Murine$Treatment)), ]
+
+Metadata_IFN_Human <- Used_metadata_Human[(grepl("tRNA", Used_metadata_Human$Epo)), ]
+Metadata_IFN_Murine <- Used_metadata_Murine[(grepl("tRNA", Used_metadata_Murine$Epo)), ]
+
+Metadata_p6_Human <- Used_metadata_Human[(grepl("IFN_alpa2b", Used_metadata_Human$Treatment)), ]
+Metadata_p6_Murine <- Used_metadata_Murine[(grepl("IFN_alpa2b", Used_metadata_Murine$Treatment)), ]
+
+```
+
+
+```{r First approach}
+#
+#============================================================================
+#
+
+
+dsds1 <-DESeqDataSetFromMatrix(countData = SAMPLES_HUMAN[,colnames(SAMPLES_HUMAN) %in% Metadata_tRNA_Human$ID],
+                              colData = Metadata_tRNA_Human,
+                              design = ~ Epo )
+dds_1H <- DESeq(dsds1)
+
+results_1H_trna <- results(dds_1H)
+results_df1H_trna<-as.data.frame(results_1H_trna)
+results_df1H_trna<-na.omit(results_df1H_trna)
+#
+#============================================================================
+#
+dsds2 <-DESeqDataSetFromMatrix(countData = SAMPLES_MURINE[,colnames(SAMPLES_MURINE) %in% Metadata_tRNA_Murine$ID],
+                              colData = Metadata_tRNA_Murine,
+                              design = ~ Epo )
+dds_1M <- DESeq(dsds2)
+
+results_1M_trna <- results(dds_1M)
+results_df1M_trna<-as.data.frame(results_1M_trna)
+results_df1M_trna<-na.omit(results_df1M_trna)
+
+#
+#===========================================================================
+#
+
+dsds3 <-DESeqDataSetFromMatrix(countData = SAMPLES_HUMAN[,colnames(SAMPLES_HUMAN) %in% Metadata_IFN_Human$ID],
+                              colData = Metadata_IFN_Human,
+                              design = ~ Treatment )
+dds_2H <- DESeq(dsds3)
+
+results_2H_IFN <- results(dds_2H)
+results_df2H_IFN <- as.data.frame(results_2H_IFN)
+results_df2H_IFN <- na.omit(results_df2H_IFN)
+
+#
+#============================================================================
+#
+
+dsds4 <-DESeqDataSetFromMatrix(countData = SAMPLES_MURINE[,colnames(SAMPLES_MURINE) %in% Metadata_IFN_Murine$ID],
+                              colData = Metadata_IFN_Murine,
+                              design = ~ Treatment )
+dds_2M <- DESeq(dsds4)
+
+results_2M_IFN <- results(dds_2M)
+results_df2M_IFN <- as.data.frame(results_2M_IFN)
+results_df2M_IFN <- na.omit(results_df2M_IFN)
+
+#
+#===========================================================================
+#
+
+dsds5 <-DESeqDataSetFromMatrix(countData = SAMPLES_HUMAN[,colnames(SAMPLES_HUMAN) %in% Metadata_p6_Human$ID],
+                              colData = Metadata_p6_Human,
+                              design = ~ Epo )
+dds_3H <- DESeq(dsds5)
+
+results_3H_p6 <- results(dds_3H)
+results_df3H_p6 <- as.data.frame(results_3H_p6)
+results_df3H_p6 <- na.omit(results_df3H_p6)
+
+#
+#============================================================================
+#
+
+dsds6 <-DESeqDataSetFromMatrix(countData = SAMPLES_MURINE[,colnames(SAMPLES_MURINE) %in% Metadata_p6_Murine$ID],
+                              colData = Metadata_p6_Murine,
+                              design = ~ Epo )
+dds_3M <- DESeq(dsds6)
+
+results_3M_p6 <- results(dds_3M)
+results_df3M_p6 <- as.data.frame(results_3M_p6)
+results_df3M_p6 <- na.omit(results_df3M_p6)
+```
+
+
+
+```{r Apply appropiate filters}
+
+#Maybe check the padjvalue
+
+filtered_results_human<- results_df1H_trna[results_df1H_trna$pvalue<0.05, ]
+filtered_results_human<- filtered_results_human[abs(filtered_results_human$log2FoldChange)>=1.5, ]
+
+filtered_results_murine<- results_df1M_trna[results_df1M_trna$pvalue<0.05, ]
+filtered_results_murine<- filtered_results_murine[abs(filtered_results_murine$log2FoldChange)>=1.5, ]
+
+filtered_results_human2<- results_df2H_IFN[results_df2H_IFN$pvalue<0.05, ]
+filtered_results_human2<- filtered_results_human2[abs(filtered_results_human2$log2FoldChange)>=1.5, ]
+
+filtered_results_murine2<- results_df2M_IFN[results_df2M_IFN$pvalue<0.05, ]
+filtered_results_murine2<- filtered_results_murine2[abs(filtered_results_murine2$log2FoldChange)>=1.5, ]
+
+filtered_results_human3<- results_df3H_p6[results_df3H_p6$pvalue<0.05, ]
+filtered_results_human3<- filtered_results_human2[abs(filtered_results_human2$log2FoldChange)>=1.5, ]
+
+filtered_results_murine3<- results_df3M_p6[results_df2M_IFN$pvalue<0.05, ]
+filtered_results_murine3<- filtered_results_murine2[abs(filtered_results_murine2$log2FoldChange)>=1.5, ]
+
+```
+
+
+Then we will look after the genomic information of the genes as for example it's
+exon site in order to do further analysis.
+
+```{r RPKM calc}
+GTF_Human <- readGFF("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.111.gtf")
+GTF_Murine <- readGFF("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
+
+rpkm_h<- RPKM_calc(gtf_data = GTF_Human, counts_data =  SAMPLES_HUMAN)
+rpkm_m <- RPKM_calc(gtf_data = GTF_Murine, counts_data = SAMPLES_MURINE)
+
+rpkm_h <- na.omit(rpkm_h)
+rpkm_m <- na.omit(rpkm_m)
+
+```
+
+
+```{r Data Filtering for tests}
+
+sc_h <- log10(rpkm_h)+1
+sc_h <- na.omit(sc_h)
+sc_h <- sc_h[!is.infinite(rowSums(sc_h)),]
+sc_h <- sc_h[(colnames(sc_h)> 0.5),]
+
+sc_h100 <- head(sc_h[order(-rowMeans(sc_h)), ], 100)
+
+sc_m <- log10(rpkm_m)+1
+sc_m <- na.omit(sc_m)
+sc_m <- sc_m[!is.infinite(rowSums(sc_m)),]
+sc_m <- sc_m[(colnames(sc_m)> 0.5),]
+
+sc_m100 <- head(sc_m[order(-rowMeans(sc_m)), ], 100)
+
+```
+
+
+```{r Set generation with management of filtered res}
+sc_h1 <- rpkm_h[rownames(rpkm_h) %in% rownames(filtered_results_human), colnames(rpkm_h) %in% Metadata_tRNA_Human$ID]
+sc_h2 <- sc_h[rownames(sc_h) %in% rownames(filtered_results_human2), colnames(sc_h) %in% Metadata_IFN_Human$ID ]
+sc_h3 <- sc_h[rownames(sc_h) %in% rownames(filtered_results_human3), colnames(sc_h) %in% Metadata_p6_Human$ID]
+
+sc_m1 <- rpkm_m[rownames(rpkm_m) %in% rownames(filtered_results_murine), colnames(rpkm_m) %in% Metadata_tRNA_Murine$ID] 
+sc_m2 <- sc_m[rownames(sc_m) %in% rownames(filtered_results_murine2), colnames(sc_m) %in% Metadata_IFN_Murine$ID]
+sc_m3 <- sc_m[rownames(sc_m) %in% rownames(filtered_results_murine3), colnames(sc_m) %in% Metadata_p6_Murine$ID]
+
+```
+
+
+## Plotting Block                                           
+
+
+First we should determine which of the main thresholds it's important over the rest
+
+```{r GO setup}
+
+ensmbl_ds_human <- useMart(biomart = "ensembl", dataset =  "hsapiens_gene_ensembl")
+ensmbl_ds_murine <- useMart(biomart = "ensembl", dataset =  "mmusculus_gene_ensembl")
+
+all_genes_human <- getBM(attributes = c("ensembl_gene_id"), mart = ensmbl_ds_human)$ensembl_gene_id
+all_genes_murine <- getBM(attributes = c("ensembl_gene_id"), mart = ensmbl_ds_murine)$ensembl_gene_id
+
+```
+
+```{r Basic settings for plots}
+
+pallete <- list(Treatment = c( Mock = "#6d3eb0", 	IFN_alpa2b = "#8c7e00"), Epo = c(tRNA = "#0082d1", p6 = "#a0003c"))
+
+sample_color_1_1 <- data.frame(Treatment = Metadata_tRNA_Murine$Treatment, Epo = Metadata_tRNA_Murine$Epo)
+sample_color_2_1 <- data.frame(Treatment = Metadata_tRNA_Human$Treatment, Epo = Metadata_tRNA_Human$Epo)
+
+sample_color_1_2 <- data.frame(Treatment = Metadata_IFN_Murine$Treatment, Epo = Metadata_IFN_Murine$Epo)
+sample_color_2_2 <- data.frame(Treatment = Metadata_IFN_Human$Treatment, Epo = Metadata_IFN_Human$Epo)
+
+sample_color_1_3 <- data.frame(Treatment = Metadata_p6_Murine$Treatment, Epo = Metadata_p6_Murine$Epo)
+sample_color_2_3<- data.frame(Treatment = Metadata_p6_Human$Treatment, Epo = Metadata_p6_Human$Epo)
+
+#
+#----------------------------------------------------------------------------------------------
+#
+
+genes_filter_h<- select(org.Hs.eg.db, keys = rownames(sc_h), columns = "SYMBOL", keytype = "ENSEMBL")
+genes_filter_m <- select(org.Mm.eg.db, keys = rownames(sc_m), columns = "SYMBOL", keytype = "ENSEMBL")
+
+
+#sc_X states for the filtered previously so no need of other applied filters on top
+
+rpkm_h_1 <- sc_h1
+rpkm_m_1 <- sc_m1
+rpkm_h_2 <- sc_h2
+rpkm_m_2 <- sc_m2
+rpkm_h_3 <- sc_h3
+rpkm_m_3 <- sc_m3
+
+rpkm_h_1$ensembl_gene_id <- rownames(sc_h1)
+rpkm_m_1$ensembl_gene_id <- rownames(sc_m1)
+rpkm_h_2$ensembl_gene_id <- rownames(sc_h2)
+rpkm_m_2$ensembl_gene_id <- rownames(sc_m2)
+rpkm_h_3$ensembl_gene_id <- rownames(sc_h3)
+rpkm_m_3$ensembl_gene_id <- rownames(sc_m3)
+
+
+rpkm_h_1 <-  merge(rpkm_h_1, genes_filter_h, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+rpkm_m_1 <-  merge(rpkm_m_1, genes_filter_m, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+rpkm_h_2 <-  merge(rpkm_h_2, genes_filter_h, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+rpkm_m_2 <-  merge(rpkm_m_2, genes_filter_m, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+rpkm_h_3 <-  merge(rpkm_h_3, genes_filter_h, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+rpkm_m_3 <-  merge(rpkm_m_3, genes_filter_m, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+
+rpkm_h_1<- na.omit(rpkm_h_1)
+rpkm_h_2<- na.omit(rpkm_h_2)
+rpkm_h_3<- na.omit(rpkm_h_3)
+rpkm_m_1<- na.omit(rpkm_m_1)
+rpkm_m_2<- na.omit(rpkm_m_2)
+rpkm_m_3<- na.omit(rpkm_m_3)
+
+
+rownames(rpkm_m_1) <- rpkm_m_1$SYMBOL
+rownames(rpkm_h_1) <- rpkm_h_1$SYMBOL
+rownames(rpkm_m_2) <- rpkm_m_2$SYMBOL
+rownames(rpkm_h_2) <- rpkm_h_2$SYMBOL
+rownames(rpkm_m_3) <- rpkm_m_3$SYMBOL
+rownames(rpkm_h_3) <- rpkm_h_3$SYMBOL
+
+
+rpkm_h_1 <- rpkm_h_1[2:(ncol(rpkm_h_1)-1)]
+rpkm_m_1 <- rpkm_m_1[2:(ncol(rpkm_m_1)-1)]
+rpkm_h_2 <- rpkm_h_2[2:(ncol(rpkm_h_2)-1)]
+rpkm_m_2 <- rpkm_m_2[2:(ncol(rpkm_m_2)-1)]
+rpkm_h_3 <- rpkm_h_3[2:(ncol(rpkm_h_3)-1)]
+rpkm_m_3 <- rpkm_m_3[2:(ncol(rpkm_m_3)-1)]
+
+```
+
+
+```{r Sanity check heatmap}
+
+vsd_sanity_h <-assay(vst(dds_2H))
+vsd_sanity_h <- na.omit(as.data.frame(t(scale(t(vsd_sanity_h)))))
+
+vsd_sanity_m <-assay(vst(dds_2M))
+vsd_sanity_m <- na.omit(as.data.frame(t(scale(t(vsd_sanity_m)))))
+
+vsd_sanity_h2 <-assay(vst(dds_2H))
+vsd_sanity_h2 <- na.omit(vsd_sanity_h)
+
+vsd_sanity_m2 <-assay(vst(dds_2M))
+vsd_sanity_m2 <- na.omit(vsd_sanity_m)
+
+
+pheatmap(vsd_sanity_h, annotation_col =sample_color_2_2, annotation_colors = pallete )
+pheatmap(vsd_sanity_m, annotation_col =sample_color_1_2, annotation_colors = pallete)
+
+pheatmap(vsd_sanity_h2, annotation_col =sample_color_2_2, annotation_colors = pallete )
+pheatmap(vsd_sanity_m2, annotation_col =sample_color_1_2, annotation_colors = pallete)
+
+```
+
+```{r}
+
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_distance_rows = "euclidean")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_distance_rows = "maximum")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_distance_rows = "manhattan")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_distance_rows = "canberra")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_distance_rows = "minkowski")
+
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "euclidean", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "maximum", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "manhattan", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "canberra", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_rows = "minkowski", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "euclidean", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "maximum", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "manhattan", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "canberra", clustering_method = "centroid")
+```
+
+```{r}
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "complete")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "single")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "average")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "mcquitty")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "median")
+pheatmap(vsd_sanity_h, clustering_distance_cols = "minkowski", clustering_method = "centroid")
+```
+
+```{r General Heatmaps}
+
+pheatmap(as.matrix(sc_h1), annotation_col =sample_color_2_1,cutree_cols = 2 ,main = "tRNa and p6 transfection effect, Human", annotation_colors = pallete ) 
+pheatmap(as.matrix(sc_m1), annotation_col =sample_color_1_1,cutree_cols = 2 ,main = "tRNa and p6 transfection effect, Murine", annotation_colors = pallete ) 
+
+pheatmap(as.matrix(rpkm_h_2), annotation_col =sample_color_2_2,cutree_cols = 2 ,main = "IFNalpha and Mock effect, Human", annotation_colors = pallete ) 
+pheatmap(as.matrix(rpkm_m_2), annotation_col =sample_color_1_2,cutree_cols = 2 ,main = "IFNalpha and Mock effect, Murine", annotation_colors = pallete ) 
+
+pheatmap(as.matrix(rpkm_h_3), annotation_col =sample_color_2_3,cutree_cols = 2 ,main = "tRNa and p6 transfection effect over IFN treatment, Human", annotation_colors = pallete ) 
+pheatmap(as.matrix(rpkm_m_3), annotation_col =sample_color_1_3,cutree_cols = 2 ,main = "tRNa and p6 transfection effect over IFN treatment, Murine", annotation_colors = pallete ) 
+
+
+#
+#-------------------------------------------------------------------------------
+#
+
+pheatmap(t(scale(t(as.matrix(sc_h1)))), annotation_col =sample_color_2_1,cutree_cols = 2 ,main = "tRNa and p6 transfection effect, Human, Scaled", annotation_colors = pallete ) 
+pheatmap(t(scale(t(as.matrix(sc_m1)))), annotation_col =sample_color_1_1,cutree_cols = 2 ,main = "tRNa and p6 transfection effect, Murine, Scaled", annotation_colors = pallete )
+
+pheatmap(t(scale(t(as.matrix(rpkm_h_2)))), annotation_col =sample_color_2_2,cutree_cols = 2 ,main = "IFNalpha and Mock effect, Human, Scaled", annotation_colors = pallete ) 
+pheatmap(t(scale(t(as.matrix(rpkm_m_2)))), annotation_col =sample_color_1_2,cutree_cols = 2 ,main = "IFNalpha and Mock effect, Murine, Scaled", annotation_colors = pallete ) 
+
+pheatmap(t(scale(t(as.matrix(rpkm_h_3)))), annotation_col =sample_color_2_3,cutree_cols = 2 ,main = "tRNa and p6 transfection effect over IFN treatment, Human, Scaled", annotation_colors = pallete ) 
+pheatmap(t(scale(t(as.matrix(rpkm_m_3)))), annotation_col =sample_color_1_3,cutree_cols = 2 ,main = "tRNa and p6 transfection effect over IFN treatment, Murine, Scaled", annotation_colors = pallete ) 
+
+
+```
+
+$Log_2$ Fold Change and RPKM subsampling plots
+
+
+```{r Subsampling plots}
+
+ggpairs(results_df1H_trna)
+ggpairs(results_df2H_IFN)
+ggpairs(results_df3H_p6)
+ggpairs(results_df1M_trna)
+ggpairs(results_df2M_IFN)
+ggpairs(results_df3M_p6)
+
+# pheatmap(as.matrix(t1), main = "All timepoints toghether Heatmap, normalized count 1000 top sampless", scale = "row", annotation_col = sample_color_1,
+#          annotation_colors = pallete, cluster_rows = FALSE)
+# 
+# pheatmap(as.matrix(TP_all_vsd_test), main = "All timepoints toghether Heatmap, normalized count 1000 top sampless", scale = "row", annotation_col = sample_color_1,
+#          annotation_colors = pallete, cluster_rows = FALSE)
+
+
+```
+
+
+
+## GO analysis
+
+From the RPKM filtering we will select only the genes present, keeping setted up.
+Select gene names in the RPKM and on the results so we will generate the highest 
+```{r filter gen id present }
+
+RPKM_h1 <- filtered_results_human[rownames(filtered_results_human) %in% rownames(rpkm_h), ]
+RPKM_h2 <- filtered_results_human2[rownames(filtered_results_human2) %in% rownames(sc_h), ]
+RPKM_h3 <- filtered_results_human3[rownames(filtered_results_human3) %in% rownames(sc_h), ]
+
+RPKM_m1 <- filtered_results_murine[rownames(filtered_results_murine) %in% rownames(rpkm_m), ]#In this case loosing all samples so RPKM filter will not be further applied
+                                                                                            #Has just few samples in order to work properly
+RPKM_m2 <- filtered_results_murine2[rownames(filtered_results_murine2) %in% rownames(sc_m), ]
+RPKM_m3 <- filtered_results_murine3[rownames(filtered_results_murine3) %in% rownames(sc_m), ]
+
+
+```
+
+
+Needs just a Deseq result and afterwards we can do the best selection
+
+
+
+```{r GO analysis}
+
+
+# GO_Human_base <- result_df_RPKM_DESeq
+
+#### 1 and 4 are both of them shuted down in order they generate a empty camps as they 
+#### only have 4 genes so it will be no apparent GO terms associated.
+
+# GO_Human_DESeq_1 <- enrichGO(gene = rownames(RPKM_h1) ,
+#                      keyType = "ENSEMBL",
+#                      OrgDb = org.Hs.eg.db,
+#                      ont = "ALL",
+#                      pAdjustMethod = "fdr",
+#                      universe = all_genes_human,
+#                      qvalueCutoff = 0.2,
+#                      pvalueCutoff = 0.05,
+#                      readable = TRUE #Provides gene symbols for further reading propouses
+#                      )
+
+GO_Human_DESeq_2 <- enrichGO(gene = rownames(RPKM_h2) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Hs.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_human,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE #Provides gene symbols for further reading propouses
+                     )
+
+GO_Human_DESeq_2_2<- enrichGO(gene = rownames(RPKM_h2) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Hs.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_human,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05
+                     )
+
+
+GO_Human_DESeq_3 <- enrichGO(gene = rownames(RPKM_h3) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Hs.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_human,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE #Provides gene symbols for further reading propouses
+                     )
+
+# GO_Human_DESeq_4 <- enrichGO(gene = rownames(filtered_results_human) ,
+#                      keyType = "ENSEMBL",
+#                      OrgDb = org.Hs.eg.db,
+#                      ont = "ALL",
+#                      universe = all_genes_human,
+#                      pAdjustMethod = "fdr", #Which it's equal to benjamini
+#                      qvalueCutoff = 0.2,
+#                      pvalueCutoff = 0.05,
+#                      readable = TRUE
+#                      )
+
+
+GO_Human_DESeq_5 <- enrichGO(gene = rownames(filtered_results_human2) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Hs.eg.db,
+                     ont = "ALL",
+                     pAdjustMethod = "fdr",
+                     universe = all_genes_human,
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE #Provides gene symbols for further reading propouses
+                     )
+
+GO_Human_DESeq_6 <- enrichGO(gene = rownames(filtered_results_human3) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Hs.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_human,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE #Provides gene symbols for further reading propouses
+                     )
+
+#================================================
+
+# GO_Murine_DESeq_1 <- enrichGO(gene =  rownames(RPKM_m1) ,
+#                      keyType = "ENSEMBL",
+#                      OrgDb = org.Mm.eg.db,
+#                      ont = "ALL",
+#                      pAdjustMethod = "fdr",
+#                      universe = all_genes_murine,
+#                      qvalueCutoff = 0.2,
+#                      pvalueCutoff = 0.05,
+#                      readable = TRUE #Provides gene symbols for further reading propouses
+#                      )
+
+GO_Murine_DESeq_2 <- enrichGO(gene = rownames(RPKM_m2) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Mm.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_murine,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE
+                     )
+
+GO_Murine_DESeq_3 <- enrichGO(gene = rownames(RPKM_m3) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Mm.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_murine,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05,
+                     readable = TRUE #Provides gene symbols for further reading propouses
+                     )
+
+# GO_Murine_DESeq_4 <- enrichGO(gene = rownames(filtered_results_murine) ,
+#                      keyType = "ENSEMBL",
+#                      OrgDb = org.Mm.eg.db,
+#                      ont = "ALL",
+#                      universe = all_genes_murine,
+#                      pAdjustMethod = "fdr", #Which it's equal to benjamini
+#                      qvalueCutoff = 0.2,
+#                      pvalueCutoff = 0.05
+#                      )
+
+GO_Murine_DESeq_5 <- enrichGO(gene = rownames(filtered_results_murine2) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Mm.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_murine,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05
+                     )
+
+GO_Murine_DESeq_6 <- enrichGO(gene = rownames(filtered_results_murine3) ,
+                     keyType = "ENSEMBL",
+                     OrgDb = org.Mm.eg.db,
+                     ont = "ALL",
+                     universe = all_genes_murine,
+                     pAdjustMethod = "fdr", #Which it's equal to benjamini
+                     qvalueCutoff = 0.2,
+                     pvalueCutoff = 0.05
+                     )
+
+
+
+```
+
+
+
+
+```{r DESeq plotting GOenrichemnt}
+
+# dotplot(GO_Human_DESeq_1, showCategory=30, title = "DESeq analysis Human, RPKM filter, Transfection analysis with mock")
+dotplot(GO_Human_DESeq_2, showCategory=30, title = "DESeq analysis Human, RPKM filter, Treatment analysis with tRNA")
+dotplot(GO_Human_DESeq_3, showCategory=30, title = "DESeq analysis Human, RPKM filter, Interferon treated Transfection analysis")
+# dotplot(GO_Human_DESeq_4, showCategory=30, title = "DESeq analysis Human, No RPKM filter, Transfection analysis with mock")
+dotplot(GO_Human_DESeq_5, showCategory=30, title = "DESeq analysis Human, No RPKM filter, Treatment analysis with tRNA")
+dotplot(GO_Human_DESeq_6, showCategory=30, title = "DESeq analysis Human, No RPKM filter, Interferon treated Transfection analysis")
+
+
+# dotplot(GO_Murine_DESeq_1, title = "DESeq analysis Murine, RPKM filter, Transfection analysis with mock")
+dotplot(GO_Murine_DESeq_2, showCategory=30, title = "DESeq analysis Murine, RPKM filter, Treatment analysis with tRNA")
+dotplot(GO_Murine_DESeq_3, showCategory=30, title = "DESeq analysis Murine, RPKM filter, Interferon treated Transfection analysis")
+# dotplot(GO_Murine_DESeq_4, showCategory=30, title = "DESeq analysis Murine, No RPKM filter, Transfection analysis with mock")
+dotplot(GO_Murine_DESeq_5, showCategory=30, title = "DESeq analysis Murine, No RPKM filter, Treatment analysis with tRNA")
+dotplot(GO_Murine_DESeq_6, showCategory=30, title = "DESeq analysis Murine, No RPKM filter, Interferon treated Transfection analysis")
+
+
+```
+
+
+Maybe try to use also edgeR, due has more consistency with the values although it is slightly worst than DESeq2 :
+https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02648-4
+
+
+```{r Venn plots GO Terms}
+
+# set_H_1 <- rownames(as.data.frame(GO_Human_DESeq_1))
+# set_M_1 <- rownames(as.data.frame(GO_Murine_DESeq_1))
+
+set_H_2 <- rownames(as.data.frame(GO_Human_DESeq_2))
+set_M_2 <- rownames(as.data.frame(GO_Murine_DESeq_2))
+
+set_H_3 <- rownames(as.data.frame(GO_Human_DESeq_3))
+set_M_3 <- rownames(as.data.frame(GO_Murine_DESeq_3))
+
+# set_H_4 <- rownames(as.data.frame(GO_Human_DESeq_4))
+# set_M_4 <- rownames(as.data.frame(GO_Murine_DESeq_4))
+
+set_H_5 <- rownames(as.data.frame(GO_Human_DESeq_5))
+set_M_5 <- rownames(as.data.frame(GO_Murine_DESeq_5))
+
+set_H_6 <- rownames(as.data.frame(GO_Human_DESeq_6))
+set_M_6 <- rownames(as.data.frame(GO_Murine_DESeq_6))
+
+# Venn_data_1 <- list(Murine= set_M_1, Humans = set_H_1)
+Venn_data_2 <- list(Murine= set_M_2, Humans = set_H_2)
+Venn_data_3 <- list(Murine= set_M_3, Humans = set_H_3)
+# Venn_data_4 <- list(Murine= set_M_4, Humans = set_H_4)
+Venn_data_5 <- list(Murine= set_M_5, Humans = set_H_5)
+Venn_data_6 <- list(Murine= set_M_6, Humans = set_H_6)
+
+# ggvenn(Venn_data_1, fill_color = c( "#009384",  "#c1dfdf"), stroke_color =  "white") + theme_void() 
+ggvenn(Venn_data_2, fill_color = c( "#00fae9",  "#308144"), stroke_color =  "white") + theme_void()
+ggvenn(Venn_data_3, fill_color = c( "#009384",  "#c1dfdf"), stroke_color =  "white") + theme_void() 
+# ggvenn(Venn_data_4, fill_color = c( "#00fae9",  "#308144"), stroke_color =  "white") + theme_void()
+ggvenn(Venn_data_5, fill_color = c( "#009384",  "#c1dfdf"), stroke_color =  "white") + theme_void() 
+ggvenn(Venn_data_6, fill_color = c( "#00fae9",  "#308144"), stroke_color =  "white") + theme_void()
+
+```
+
+```{r Goplot eecution}
+
+
+
+genes_filter_h<- select(org.Hs.eg.db, keys = rownames(sc_h), columns = "SYMBOL", keytype = "ENSEMBL")
+# genes_filter_m <- select(org.Mm.eg.db, keys = rownames(sc_m), columns = "SYMBOL", keytype = "ENSEMBL")
+
+
+#sc_X states for the filtered previously so no need of other applied filters on top
+
+chng_dat <- RPKM_h2
+
+chng_dat$ensembl_gene_id <- rownames(RPKM_h2)
+
+chng_dat <-  merge(chng_dat, genes_filter_h, by.x = "ensembl_gene_id", by.y = "ENSEMBL")
+
+
+chng_dat<- na.omit(chng_dat)
+
+rownames(chng_dat) <- chng_dat$SYMBOL
+
+chng_dat <- chng_dat[2:(ncol(chng_dat)-1)]
+
+
+
+
+Test_GO_gene <- data.frame(ID = rownames(chng_dat), logFC = chng_dat$log2FoldChange, P.Value = chng_dat$pvalue, adj.P.Val = chng_dat$padj)
+
+ff <- as.data.frame(GO_Human_DESeq_2)
+
+Test_Go_terms <- data.frame(Category = ff$ONTOLOGY, ID = ff$ID, Term = ff$Description, Genes = ff$geneID, adj_pval = ff$p.adjust)
+
+
+Test_Go_terms$Genes <- chartr(x = Test_Go_terms$Genes, old = "/" , new = ",")
+
+test_1 <- circle_dat(terms = Test_Go_terms, genes =  Test_GO_gene)
+
+
+
+
+GOBubble(test_1)
+
+
+```
+
+
+```{r data prep heatmaps}
+genes_filter_h<- getBM(attributes = c("ensembl_gene_id", "external_gene_name"), mart = ensmbl_ds_human)
+genes_filter_m <- getBM(attributes = c("ensembl_gene_id", "external_gene_name"), mart = ensmbl_ds_murine)
+
+
+#sc_X states for the filtered previously so no need of other applied filters on top
+
+rpkm_h_2 <- sc_h
+rpkm_m_2 <- sc_m
+
+rpkm_h_2$ensembl_gene_id <- rownames(sc_h)
+rpkm_m_2$ensembl_gene_id <- rownames(sc_m)
+
+rpkm_h_2 <-  merge(rpkm_h_2, genes_filter_h, by.x = "ensembl_gene_id", by.y = "ensembl_gene_id")
+rpkm_m_2 <-  merge(rpkm_m_2, genes_filter_m, by.x = "ensembl_gene_id", by.y = "ensembl_gene_id")
+
+rel_genes_m <- GO_Murine_DESeq_7@result$geneID
+unique_rel_genes_m <- unique(unlist(strsplit(rel_genes_m, "/")))
+
+rel_genes_h <- GO_Human_DESeq_7@result$geneID
+unique_rel_genes_h <- unique(unlist(strsplit(rel_genes_h, "/")))
+
+rpkm_m_2 <- filter(rpkm_m_2, 
+                   external_gene_name %in% unique_rel_genes_m)
+rpkm_h_2 <- filter(rpkm_h_2, 
+                   external_gene_name %in% unique_rel_genes_h)
+
+rownames(rpkm_m_2) <- rpkm_m_2$external_gene_name
+rownames(rpkm_h_2) <- rpkm_h_2$external_gene_name
+
+rpkm_m_2 <- rpkm_m_2[2:25]
+rpkm_h_2 <- rpkm_h_2[2:13]
+```
+
+
+```{r Heatmap Genes against Samples go presence or absence}
+
+#Set the different data ready for generating further heat maps
+
+# RPKM_set <- log10(rpkm_h_2)+1
+# RPKM_set <- na.omit(RPKM_set)
+# RPKM_set <- RPKM_set[!is.infinite(rowSums(RPKM_set)),]
+# RPKM_set <- RPKM_set %>% filter(if_any(ends_with("_RPKM"),~ . >= 0.5)) 
+# RPKM_set <- RPKM_set[1:(length(RPKM_set)-3)]
+
+RPKM_set <- rpkm_h_2
+
+Filter_Go_Terms <- c("GO:0140888", "GO:0051607", "GO:0034340", "GO:0060333", "GO:0060337")
+
+
+GO_Human_DESeq_GOSEL <- as.data.frame(GO_Human_DESeq_7) %>%
+  dplyr::filter(ID %in% Filter_Go_Terms)
+
+geneIds <- unlist(unique(str_split(GO_Human_DESeq_GOSEL$geneID, "/")))
+
+  
+RPKM_set_filtered <- RPKM_set[unique(geneIds), , drop = FALSE]
+RPKM_set_filtered <- na.omit(RPKM_set_filtered)
+RPKM_set_filtered <- RPKM_set_filtered[!is.infinite(rowSums(RPKM_set_filtered)),]
+
+sigGenes <- row.names(RPKM_set_filtered)
+
+annGSEA <- data.frame(row.names = sigGenes)
+for (j in 1:length(sigGenes)) {
+  # IN this case it will be introducing inside the data required so we will
+  # work on it further parts(just adding the detector)
+  #   # create a matching pattern to ensure genes match exactly
+  #   #  '^GENE,'  --> Match at beginning of matching string
+  #   #  ', GENE$'  --> Match at end of matching string
+  #   #  'GENE,'  --> Match between first and last gene in matching string
+    gene <- sigGenes[j]
+    pattern <- paste('^', gene, ', |, ', gene, '$| ', gene, ',', sep = '')
+    for (k in 1:nrow(GO_Human_DESeq_GOSEL)) {
+      if (any(grepl(pattern, GO_Human_DESeq_GOSEL$geneID[k]))) {
+        annGSEA[j,k] <- 1
+      } else {
+        annGSEA[j,k] <- 0
+      }
+    }
+  }
+  
+for (j in 1:length(sigGenes)) {
+    gene <- sigGenes[j]
+    annGSEA[j,] <- ifelse(str_detect(GO_Human_DESeq_GOSEL$geneID, gene), 1, 0)
+  }
+  
+colnames(annGSEA) <- paste(GO_Human_DESeq_GOSEL$ID, GO_Human_DESeq_GOSEL$Description)
+
+annGSEA <- annGSEA[row.names(RPKM_set_filtered), , drop = FALSE]
+annGSEA <- annGSEA[,apply(annGSEA, 2, mean)!=0]
+annGSEA <- annGSEA[apply(annGSEA, 1, mean)!=0,]
+
+RPKM_set_filtered <- as.data.frame(t(RPKM_set_filtered))
+
+Ha1 <- HeatmapAnnotation( ifn_sig_pathw= annGSEA$`GO:0140888 interferon-mediated signaling pathway`,
+                          defense_resp = annGSEA$`GO:0051607 defense response to virus`,
+                          itfI_resp = annGSEA$`GO:0034340 response to type I interferon`,
+                          itfII_sig_path = annGSEA$`GO:0060333 type II interferon-mediated signaling pathway`,
+                          itfI_sig_path = annGSEA$`GO:0060337 type I interferon-mediated signaling pathway`,
+                          show_legend = c(FALSE, FALSE, FALSE, FALSE, FALSE))
+
+
+Heatmap_PHH_LogRPKM <- Heatmap(RPKM_set_filtered, name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+
+Scaled_Heatmap_PHH_LogRPKM<- Heatmap(t(scale(t(RPKM_set_filtered))), name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+
+Heatmap(RPKM_set_filtered, name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+Heatmap(t(scale(t(RPKM_set_filtered))), name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+```
+
+
+```{r Heatmap individual GOtems}
+setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/PLOTS/")
+
+
+Filter_Go_Terms <- c("GO:0140888", "GO:0051607", "GO:0034340", "GO:0060333", "GO:0060337")
+
+
+for (GO_term in Filter_Go_Terms) {
+  
+  GO_Human_DESeq <- as.data.frame(GO_Human_DESeq_7) %>%
+  dplyr::filter(ID == GO_term)
+  
+  geneIds <- unlist(unique(str_split(GO_Human_DESeq$geneID, "/")))
+
+  rpkm_df_sel <- log(rpkm_h_2 + 1)
+  RPKM_set_filtered_unique <- rpkm_df_sel[geneIds, , drop = FALSE]
+  RPKM_set_filtered_unique <- na.omit(RPKM_set_filtered_unique)
+  RPKM_set_filtered_unique <- RPKM_set_filtered_unique[!is.infinite(rowSums(RPKM_set_filtered_unique)),]
+  p1 <- pheatmap(t(scale(t(RPKM_set_filtered_unique))), cluster_cols = TRUE, fontsize_col = 7, fontsize_row = 7, fontsize = 8 ,main = paste(GO_Human_DESeq$ID, GO_Human_DESeq$Description, "- Human Samples Scaled"))
+  png(paste0("Heatmap_", GO_Human_DESeq$ID,"_",GO_Human_DESeq$Description,"_Human_Samples_Scaled.png"), width = 1920, height = 1080)
+  draw(p1)
+  dev.off()
+  draw(p1)
+}
+
+for (GO_term in Filter_Go_Terms) {
+  
+  GO_Human_DESeq <- as.data.frame(GO_Human_DESeq_7) %>%
+  dplyr::filter(ID == GO_term)
+  
+  geneIds <- unlist(unique(str_split(GO_Human_DESeq$geneID, "/")))
+
+  rpkm_df_sel <- log(rpkm_h_2 + 1)
+  RPKM_set_filtered_unique <- rpkm_df_sel[geneIds, , drop = FALSE]
+  RPKM_set_filtered_unique <- na.omit(RPKM_set_filtered_unique)
+  RPKM_set_filtered_unique <- RPKM_set_filtered_unique[!is.infinite(rowSums(RPKM_set_filtered_unique)),]
+  p1 <- pheatmap(RPKM_set_filtered_unique, cluster_cols = TRUE, fontsize_col = 7, fontsize_row = 7, fontsize = 8 ,main = paste(GO_Human_DESeq$ID, GO_Human_DESeq$Description, "- Human Samples UnScaled"))
+  png(paste0("Heatmap_", GO_Human_DESeq$ID,"_",GO_Human_DESeq$Description,"_Human_Samples_UnScaled.png"), width = 1920, height = 1080)
+  draw(p1)
+  dev.off()
+  draw(p1)
+}
+```
+
+
+
+Now we will loop into, Murine Heatmaps
+
+
+```{r Heatmap Genes against Samples go presence or absence Murine}
+
+#Set the different data ready for generating further heat maps
+
+# RPKM_set <- log10(rpkm_h_2)+1
+# RPKM_set <- na.omit(RPKM_set)
+# RPKM_set <- RPKM_set[!is.infinite(rowSums(RPKM_set)),]
+# RPKM_set <- RPKM_set %>% filter(if_any(ends_with("_RPKM"),~ . >= 0.5)) 
+# RPKM_set <- RPKM_set[1:(length(RPKM_set)-3)]
+
+RPKM_set <- rpkm_m_2
+
+Filter_Go_Terms <- c("GO:0051607", "GO:0039529", "GO:0045088", "GO:0045069", "GO:0060339")
+
+
+GO_Murine_DESeq_GOSEL <- as.data.frame(GO_Murine_DESeq_7) %>%
+  dplyr::filter(ID %in% Filter_Go_Terms)
+
+geneIds <- unlist(unique(str_split(GO_Murine_DESeq_GOSEL$geneID, "/")))
+
+  
+RPKM_set_filtered <- RPKM_set[unique(geneIds), , drop = FALSE]
+RPKM_set_filtered <- na.omit(RPKM_set_filtered)
+RPKM_set_filtered <- RPKM_set_filtered[!is.infinite(rowSums(RPKM_set_filtered)),]
+
+sigGenes <- row.names(RPKM_set_filtered)
+
+annGSEA <- data.frame(row.names = sigGenes)
+for (j in 1:length(sigGenes)) {
+  # IN this case it will be introducing inside the data required so we will
+  # work on it further parts(just adding the detector)
+  #   # create a matching pattern to ensure genes match exactly
+  #   #  '^GENE,'  --> Match at beginning of matching string
+  #   #  ', GENE$'  --> Match at end of matching string
+  #   #  'GENE,'  --> Match between first and last gene in matching string
+    gene <- sigGenes[j]
+    pattern <- paste('^', gene, ', |, ', gene, '$| ', gene, ',', sep = '')
+    for (k in 1:nrow(GO_Murine_DESeq_GOSEL)) {
+      if (any(grepl(pattern, GO_Murine_DESeq_GOSEL$geneID[k]))) {
+        annGSEA[j,k] <- 1
+      } else {
+        annGSEA[j,k] <- 0
+      }
+    }
+  }
+  
+for (j in 1:length(sigGenes)) {
+    gene <- sigGenes[j]
+    annGSEA[j,] <- ifelse(str_detect(GO_Murine_DESeq_GOSEL$geneID, gene), 1, 0)
+  }
+  
+colnames(annGSEA) <- paste(GO_Murine_DESeq_GOSEL$ID, GO_Murine_DESeq_GOSEL$Description)
+
+annGSEA <- annGSEA[row.names(RPKM_set_filtered), , drop = FALSE]
+annGSEA <- annGSEA[,apply(annGSEA, 2, mean)!=0]
+annGSEA <- annGSEA[apply(annGSEA, 1, mean)!=0,]
+
+RPKM_set_filtered <- as.data.frame(t(RPKM_set_filtered))
+
+Ha1 <- HeatmapAnnotation( def_resp_virus= annGSEA$`GO:0051607 defense response to virus`,
+                          inn_immune_resp_reg= annGSEA$`GO:0045088 regulation of innate immune response`,
+                          reg_viral_gen_rep = annGSEA$`GO:0045069 regulation of viral genome replication`,
+                          RIG1_sig_path = annGSEA$`GO:0039529 RIG-I signaling pathway`,
+                          negative_ifnI_med_path = annGSEA$`GO:0060339 negative regulation of type I interferon-mediated signaling pathway`,
+                          show_legend = c(FALSE, FALSE, FALSE, FALSE, FALSE))
+
+
+Heatmap_PHH_LogRPKM <- Heatmap(RPKM_set_filtered, name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+
+Scaled_Heatmap_PHH_LogRPKM<- Heatmap(t(scale(t(RPKM_set_filtered))), name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+
+Heatmap(RPKM_set_filtered, name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+
+Heatmap(t(scale(t(RPKM_set_filtered))), name = "RPKM value", bottom_annotation = Ha1,
+                              row_names_gp = gpar(fontsize = 8, fontface = 'bold'))
+```
+
+
+```{r Heatmap individual GOtems Murine}
+setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/PLOTS/Heatmaps/Murine/")
+
+
+Filter_Go_Terms <- c("GO:0051607", "GO:0039529", "GO:0045088", "GO:0045069", "GO:0060339")
+
+
+for (GO_term in Filter_Go_Terms) {
+  
+  GO_Murine_DESeq <- as.data.frame(GO_Murine_DESeq_7) %>%
+  dplyr::filter(ID == GO_term)
+  
+  geneIds <- unlist(unique(str_split(GO_Murine_DESeq$geneID, "/")))
+
+  rpkm_df_sel <- log(rpkm_m_2 + 1)
+  RPKM_set_filtered_unique <- rpkm_df_sel[geneIds, , drop = FALSE]
+  RPKM_set_filtered_unique <- na.omit(RPKM_set_filtered_unique)
+  RPKM_set_filtered_unique <- RPKM_set_filtered_unique[!is.infinite(rowSums(RPKM_set_filtered_unique)),]
+  p1 <- pheatmap(t(scale(t(RPKM_set_filtered_unique))), cluster_cols = TRUE, fontsize_col = 7, fontsize_row = 7, fontsize = 8 ,main = paste(GO_Murine_DESeq$ID, GO_Murine_DESeq$Description, "- Murine Samples Scaled"))
+  png(paste0("Heatmap_", GO_Murine_DESeq$ID,"_",GO_Murine_DESeq$Description,"_Murine_Samples_Scaled.png"), width = 1920, height = 1080)
+  draw(p1)
+  dev.off()
+  draw(p1)
+}
+
+for (GO_term in Filter_Go_Terms) {
+  
+  GO_Murine_DESeq <- as.data.frame(GO_Murine_DESeq_7) %>%
+  dplyr::filter(ID == GO_term)
+  
+  geneIds <- unlist(unique(str_split(GO_Murine_DESeq$geneID, "/")))
+
+  rpkm_df_sel <- log(rpkm_m_2 + 1)
+  RPKM_set_filtered_unique <- rpkm_df_sel[geneIds, , drop = FALSE]
+  RPKM_set_filtered_unique <- na.omit(RPKM_set_filtered_unique)
+  RPKM_set_filtered_unique <- RPKM_set_filtered_unique[!is.infinite(rowSums(RPKM_set_filtered_unique)),]
+  p1 <- pheatmap(RPKM_set_filtered_unique, cluster_cols = TRUE, fontsize_col = 7, fontsize_row = 7, fontsize = 8 ,main = paste(GO_Murine_DESeq$ID, GO_Murine_DESeq$Description, "- Murine Samples UnScaled"))
+  png(paste0("Heatmap_", GO_Murine_DESeq$ID,"_",GO_Murine_DESeq$Description,"_Murine_Samples_UnScaled.png"), width = 1920, height = 1080)
+  draw(p1)
+  dev.off()
+  draw(p1)
+}
+```
+
+
+
+Now we will loop and start with the different kind of present Volcanoplots
+
+```{r Volcano plots}
+
+
+EnhancedVolcano(results_df1H, 
+                lab = rownames(results_df1H),
+                x = 'log2FoldChange',
+                y = 'pvalue')
+
+EnhancedVolcano(results_df2H, 
+                lab = rownames(results_df2H),
+                x = 'log2FoldChange',
+                y = 'pvalue')
+
+
+
+EnhancedVolcano(results_df1M, 
+                lab = rownames(results_df1M),
+                x = 'log2FoldChange',
+                y = 'pvalue')
+
+EnhancedVolcano(results_df2M, 
+                lab = rownames(results_df2M),
+                x = 'log2FoldChange',
+                y = 'pvalue')
+
+```
+
+
+
