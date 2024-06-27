@@ -10,11 +10,19 @@ import time
 
 
 def file_list(path):
+    '''
+    This fuction recieves a path and simply returns a list with all the files, made for convinience.
+    For execution time better avoid the call (requires some more execution time but it's not excessive.)
+    '''
     listed = os.listdir(path)
     return(listed)
 
 
 def move_files(source_folder, destination_folder, file_extension):
+    '''
+    Takes two paths and move any file from source_folder to destination folder. The files
+    that will be moved contian as an ending (can be an extenssion or more, maybe only interested on how do they end up + extension).
+    '''
     # Ensure that both the source and destination folders exist
     if not os.path.exists(source_folder):
         print(f"Source folder '{source_folder}' does not exist.")
@@ -38,10 +46,13 @@ def move_files(source_folder, destination_folder, file_extension):
 
 
 def Fastqdump(input_path, savepath, paired = False, old = True):
+    '''
+    Transforms from the  sra files from the raw reads, and proceed them in order to obtain the fastq files
+    only is required to state  if it's paired or not. Avoid using old, was the first version applied and it's for the 
+    fast execution of it.
+    '''
     
-
     os.chdir(input_path)
-
 
     for file in file_list(input_path):
         if old == True:
@@ -77,6 +88,11 @@ def Fastqdump(input_path, savepath, paired = False, old = True):
 
 
 def run_Fastqc(input_Path, savepath):
+    '''
+    Executes a whole quality control over all the samples that are located in a specific path,
+    and store them in the desired folder. The folder containing plots + information as overepresented sequences.
+    '''
+    
     os.chdir(input_Path)
     archives = file_list(input_Path)
     separator= ' ' 
@@ -95,6 +111,10 @@ def run_Fastqc(input_Path, savepath):
 
 
 def run_Multiqc(input_Path, savepath , options=''):
+    '''
+    It generates the multiqc for the desired fastq files as on fastqc works in a similar way, just adding that you 
+    can configure anything you need writting it on the options field, in the adequate format (use the one on the manual, taking into account spaces, --, or -).
+    '''
     os.chdir(input_Path)
 
     command = ["multiqc{} -o {} {} ".format(' '+ options if options else '', savepath, input_Path)]
