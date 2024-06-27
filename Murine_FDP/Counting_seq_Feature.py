@@ -1,5 +1,9 @@
 from Fastqdumprun_3 import *
 
+'''
+Direct application of all the different  steps of the pipeline together this is in a example file again for performing them in a direct way.
+'''
+
 #BWA_Murine = run_BWA_v2(input_Path  = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath ="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/BWA/Murine",
 #    reference = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa")
 
