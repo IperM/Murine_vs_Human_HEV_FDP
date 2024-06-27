@@ -30,11 +30,12 @@ def run_Picard_Singles(input_Path, savepath, rm = True, rm_seq_dup = False):
         
 
 #    move_files(input_Path, savepath+'/Workfiles/', '.bam')
-    
+    #Detect the files that are assigned fpr performing the picard, removing duplicates, inside the path
     files = file_list(savepath+'/Workfiles')
     print("SAM FILES READY:")
     print(files)
 
+    #Show the previous files that were stored on the objective folder
     Previous_Files = file_list(savepath)
     print(Previous_Files)
 
@@ -46,18 +47,22 @@ def run_Picard_Singles(input_Path, savepath, rm = True, rm_seq_dup = False):
 
         for file in files:
             file_check = "../marked_dup_"+ file[:-14] +".bam"
+            #If file was previously on our different blocks, it will skip the process, going for the next one.
             if file_check in Previous_Files:
                 print("Not missing anything :)")
                 print(file)
                 continue
-            
+            #else it will delete the duplicates, from the file
             else:
                 command = "picard MarkDuplicates REMOVE_DUPLICATES=true I={} O={} ".format(file, "../marked_dup_"+ file[:-14] +".bam")
                 print(command)
                 print(file)
 
                 runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
+#This proces is repeated under the different conditions of removing only duplicates or removing the duplicates and the
+#Sequencing duplicates also, and further on.
 
+    
     elif rm_seq_dup == True and rm == False:
         for file in files:
             file_check = "../marked_dup_"+ file[:-14] +".bam"
@@ -116,7 +121,8 @@ def run_Htseq_Singles(input_Path, savepath, annotated):
     os.chdir(input_Path)
 
     for file in files:
-
+        #This will skip the already existing counted sequences, or the folders in order to avoid extra executions
+        #saving time in the overall parts.
         if file == "Workfiles":
             continue
 
@@ -148,6 +154,14 @@ def run_Htseq_Singles(input_Path, savepath, annotated):
 
 #Just a selection of the patterns that wants to become separated so it will move the files to the propper folders, desired
 def file_detector(path, Savepath_1, Savepath_2, Savepath_3 = "", elefant = "HepG", mice_1 = "MLT", mice_2 = "56D"):
+    '''
+    This function takes the different paths, which are the splitting 3 different cell lines that can be declared or leave them as
+    default, making them to redirect to the different folders.
+
+    Savepath_1 corresponds to elefant
+    Savepath_2 corresponds to mice_1
+    Savepath_3 correspond to mice_2
+    '''
 
     files = file_list(path)
     unfound_files = []
@@ -178,6 +192,11 @@ def file_detector(path, Savepath_1, Savepath_2, Savepath_3 = "", elefant = "HepG
     print(unfound_files)
     return unfound_files
 
+
+'''
+After this there are just examples of the application of the different tools obtaining the results as expected, normally the different
+functions take paths and flag options.
+'''
 #============================================================================================================================#
 #                                                   PREPARING THE DATA                                                       #
 #============================================================================================================================#
