@@ -6,14 +6,14 @@ In this case we will use HiSat and BWA in order to find the mapping of the diffe
 files ending up with the coverage of each sample with the p6 HEV genome. So we will 
 know how much infected genome have inside. 
 
-This will be done through different loops, one in PPH data and another in PHH data.
+This will be done through different loops, one in Murine data and another in PHH data.
 
 '''
 
-reference = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE_P6/p6_genome.fasta"
-MURINE_FILES = file_list("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples")
-HUMAN_FILES = file_list("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples")
-Mapping_Save_folder = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Mapping_p6_genome"
+reference = "~/Ian/Murine_FDP/REFERENCE_P6/p6_genome.fasta"
+MURINE_FILES = file_list("~/Ian/Murine_FDP/TrimmRes2/Murine_samples")
+HUMAN_FILES = file_list("~/Ian/Murine_FDP/TrimmRes2/Human_samples")
+Mapping_Save_folder = "/Ian/Murine_FDP/Mapping_p6_genome"
 
 print("MURINE Files:"+"\n")
 print(MURINE_FILES)
@@ -80,17 +80,23 @@ os.chdir("/mnt/Viro_Data/Mitarbeiter/Leyla/HEV_PPH")
 #================================================================================================#
 ### Now it'S the turn for BWA which it'S one of the most widely used mappers, but also has high detection of every count.
 
-BWA_Murine = run_BWA_v2(input_Path  = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_BWA_p6", reference = reference)
+#Mapping through BWA with default settings, inside the function there is already the tool to make them to build the reference in the more accurate way.
+
+BWA_Murine = run_BWA_v2(input_Path  = "~/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_BWA_p6", reference = reference)
 print("Execution finished - check the path")
 
-BWA_Human = run_BWA_v2(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_BWA_p6", reference= reference)
+BWA_Human = run_BWA_v2(input_Path="~/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_BWA_p6", reference= reference)
 print("Execution finished - check the path")
+
+# Runs picard with the tools defined in the previous block, containing the remove flags to remove the duplicates  that are not due the sequencing.
 
 PIC_BWA_Murine = run_Picard(input_Path= Mapping_Save_folder+"/Murine_BWA", savepath= Mapping_Save_folder+"/Murine_Picard_BWA_p6", rm= True, rm_seq_dup= False)
 print("Picard PPH - To check")
 
 PIC_BWA_Human = run_Picard(input_Path= Mapping_Save_folder+"/Human_BWA" , savepath= Mapping_Save_folder+"/Human_Picard_BWA_p6", rm= True, rm_seq_dup= False)
 print("Picard PHH - To check")
+
+#Remove the files that are just out logs, if you want to keep them make sure to change the function in order to move them to another folder because this will take directly the whole path and extract the information from the other files.
 
 run_rm(PIC_BWA_Murine, prefix="marked_dup_metrics_")
 run_rm(PIC_BWA_Human, prefix="marked_dup_metrics_")
@@ -117,10 +123,10 @@ print("=====================================================")
 
 ###Here starts the preparation for looking after the coverage on the tools, by trimming and mapping letting the data ready for further executions.
 
-Murine_tan = run_Tanoti_v2(input_Path = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_tanoti_p6", reference = reference)
+Murine_tan = run_Tanoti_v2(input_Path = "~/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_tanoti_p6", reference = reference)
 print("Execution finished - check the path")
 
-Human_tan = run_Tanoti_v2(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_tanoti_p6", reference= reference)
+Human_tan = run_Tanoti_v2(input_Path="~/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_tanoti_p6", reference= reference)
 print("Execution finished - check the path")
 
 PIC_tan_Murine = run_Picard(input_Path= Mapping_Save_folder+"/Murine_tanoti" , savepath= Mapping_Save_folder+"/Murine_Picard_tanoti_p6", rm= True, rm_seq_dup= False)
