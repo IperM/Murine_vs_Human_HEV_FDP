@@ -109,7 +109,7 @@ def run_Picard_Singles(input_Path, savepath, rm = True, rm_seq_dup = False):
 
                 runs = sp.run(command, shell=True, stderr=sp.PIPE, stdout=sp.PIPE, text=True)
 
-    os.chdir("/mnt/Viro_Data/Mitarbeiter/Ian")
+    os.chdir("~/Ian")
     return savepath
 
 
@@ -149,7 +149,7 @@ def run_Htseq_Singles(input_Path, savepath, annotated):
     move_files(input_Path, savepath + "/Workfiles", ".bam")
 
 
-    os.chdir("/mnt/Viro_Data/Mitarbeiter/Ian")
+    os.chdir("~/Ian")
     return savepath
 
 #Just a selection of the patterns that wants to become separated so it will move the files to the propper folders, desired
@@ -210,16 +210,16 @@ Download the full set of data on the 6 different states for the control and the 
 See its initial behaviour on the overall sense. 
 '''
 
-#DMP = Fastqdump(input_path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Fastqdump", old=False, paired=True)
-#FAS = run_Fastqc(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Fastqc1Res")
-#MUL = run_Multiqc(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Fastqc1Res", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/MultiqcRes")
+#DMP = Fastqdump(input_path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath="~/Ian/Murine_FDP/Fastqdump", old=False, paired=True)
+#FAS = run_Fastqc(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath="~/Ian/Murine_FDP/Fastqc1Res")
+#MUL = run_Multiqc(input_Path= "~/Ian/Murine_FDP/Fastqc1Res", savepath= "~/Ian/Murine_FDP/MultiqcRes")
 
 
 '''Check the trimmed versions, separing the ones that are Paired, Unpaired, etc, then we will sort and work with them'''
 
-#TRIM = run_Trimmomatic(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes", adapter_file = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/adapter_found.fasta" )
-#FAS2 =run_Fastqc(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Fastqc2Res")
-#MUL2 = run_Multiqc(input_Path= FAS2, savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/TFG+Leyla/MultiqcRes")
+#TRIM = run_Trimmomatic(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", savepath= "~/Ian/Murine_FDP/TrimmRes", adapter_file = "~/Ian/Murine_FDP/REFERENCE/adapter_found.fasta" )
+#FAS2 =run_Fastqc(input_Path= "~/Ian/Murine_FDP/TrimmRes", savepath= "~/Ian/Murine_FDP/Fastqc2Res")
+#MUL2 = run_Multiqc(input_Path= FAS2, savepath= "~/Ian/TFG+Leyla/MultiqcRes")
 
 
 #============================================================================================================================#
@@ -228,22 +228,22 @@ See its initial behaviour on the overall sense.
 
 
 #BE CAREFULL, THIS EXPECTS 3 CHARACTERS IN THE BEFORE THE DOT; PROVIDING POSSIBLE ERRORS
-#BUILD = run_HiSat2_build(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE", reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa", simple= True )
-#BUILD2= run_HiSat2_build(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE", reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly.fa", simple= True, fna = False)
+#BUILD = run_HiSat2_build(input_Path="~/Ian/Murine_FDP/REFERENCE", reference= "~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa", simple= True )
+#BUILD2= run_HiSat2_build(input_Path="~/Ian/Murine_FDP/HUMAN_REFERENCE", reference= "~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly.fa", simple= True, fna = False)
 
-#file_detector(path = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2", Savepath_1 = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", Savepath_2="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples")
+#file_detector(path = "~/Ian/Murine_FDP/TrimmRes2", Savepath_1 = "~/Ian/Murine_FDP/TrimmRes2/Human_samples", Savepath_2="~/Ian/Murine_FDP/TrimmRes2/Murine_samples")
 
-#HS2_1 = run_HiSat2_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/Human",
-#                  reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly")
-#HS2_2 = run_HiSat2_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/Murine",
-#                  reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
+#HS2_1 = run_HiSat2_v2(input_Path= "~/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath="~/Ian/Murine_FDP/HisatRes/Human",
+#                  reference= "~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly")
+#HS2_2 = run_HiSat2_v2(input_Path= "~/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath="~/Ian/Murine_FDP/HisatRes/Murine",
+#                  reference= "~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
 
 
-#PIC = run_Picard_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/Human" , savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Picard/Human", rm= True, rm_seq_dup= False)
-#HTS =  run_Htseq(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Picard/Human", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Htseq/Human", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.111.gtf")
+#PIC = run_Picard_v2(input_Path= "~/Ian/Murine_FDP/HisatRes/Human" , savepath= "~/Ian/Murine_FDP/Picard/Human", rm= True, rm_seq_dup= False)
+#HTS =  run_Htseq(input_Path= "~/Ian/Murine_FDP/Picard/Human", savepath= "~/Ian/Murine_FDP/Htseq/Human", annotated="~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.111.gtf")
 
-#PIC_2 = run_Picard_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/Murine" , savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Picard/Murine", rm= True, rm_seq_dup= False)
-#HTS_2 =  run_Htseq(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Picard/Murine", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Htseq/Murine", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
+#PIC_2 = run_Picard_v2(input_Path= "~/Ian/Murine_FDP/HisatRes/Murine" , savepath= "~/Ian/Murine_FDP/Picard/Murine", rm= True, rm_seq_dup= False)
+#HTS_2 =  run_Htseq(input_Path= "~/Ian/Murine_FDP/Picard/Murine", savepath= "~/Ian/Murine_FDP/Htseq/Murine", annotated="~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
 
 #============================================================================================================================#
 #                                            DOING WITHOUT ANY TRIMM                                                         #
@@ -251,51 +251,51 @@ See its initial behaviour on the overall sense.
 
 #/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01
 
-#BUILD = run_HiSat2_build(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE", reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa", simple= True )
-#BUILD2= run_HiSat2_build(input_Path="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE", reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly.fa", simple= True, fna = False)
+#BUILD = run_HiSat2_build(input_Path="~/Ian/Murine_FDP/REFERENCE", reference= "~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa", simple= True )
+#BUILD2= run_HiSat2_build(input_Path="~/Ian/Murine_FDP/HUMAN_REFERENCE", reference= "~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly.fa", simple= True, fna = False)
 
 #file_detector(path = "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01", Savepath_1 = "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Human", Savepath_2="/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Murine")
 
-#HS2_1 = run_HiSat2_v2(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Human", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Human",
-#                  reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly")
-#HS2_2 = run_HiSat2_v2(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Murine", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Murine",
-#                  reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
+#HS2_1 = run_HiSat2_v2(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Human", savepath="~/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Human",
+#                  reference= "~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.dna.primary_assembly")
+#HS2_2 = run_HiSat2_v2(input_Path= "/mnt/Viro_NGS_Data/raw_files/HEV_RNAseqNicola/2024-03_Viro_Nicola_Richard_01/2024-03_Viro_Nicola_Richard_01/Murine", savepath="~/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Murine",
+#                  reference= "~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
 
 
-#PIC = run_Picard_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Human" , savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/Human", rm= True, rm_seq_dup= False)
-#HTS =  run_Htseq(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/Human", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Htseq/Human", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.111.gtf")
+#PIC = run_Picard_v2(input_Path= "~/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Human" , savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/Human", rm= True, rm_seq_dup= False)
+#HTS =  run_Htseq(input_Path= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/Human", savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Htseq/Human", annotated="~/Ian/Murine_FDP/HUMAN_REFERENCE/Homo_sapiens.GRCh38.111.gtf")
 
-#PIC_2 = run_Picard_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Murine" , savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/Murine", rm= True, rm_seq_dup= False)
-#HTS_2 =  run_Htseq(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/Murine", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Htseq/Murine", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
+#PIC_2 = run_Picard_v2(input_Path= "~/Ian/Murine_FDP/Untrimmed_procedure/HisatRes/Murine" , savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/Murine", rm= True, rm_seq_dup= False)
+#HTS_2 =  run_Htseq(input_Path= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/Murine", savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Htseq/Murine", annotated="~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
 
 #============================================================================================================================#
 #                                            HUMAN AGAINST MURINE                                                            #
 #============================================================================================================================#
 
-HS2_1 = run_HiSat2_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/HumanVSMurine",
-                 reference= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
+HS2_1 = run_HiSat2_v2(input_Path= "~/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath="~/Ian/Murine_FDP/HisatRes/HumanVSMurine",
+                 reference= "~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.dna_sm.primary_assembly")
 
 
-PIC = run_Picard_v2(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/HisatRes/HumanVSMurine" , savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/HumanVSMurine", rm= True, rm_seq_dup= False)
-HTS =  run_Htseq(input_Path= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Picard/HumanVSMurine", savepath= "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Untrimmed_procedure/Htseq/HumanVSMurine", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
+PIC = run_Picard_v2(input_Path= "~/Ian/Murine_FDP/HisatRes/HumanVSMurine" , savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/HumanVSMurine", rm= True, rm_seq_dup= False)
+HTS =  run_Htseq(input_Path= "~/Ian/Murine_FDP/Untrimmed_procedure/Picard/HumanVSMurine", savepath= "~/Ian/Murine_FDP/Untrimmed_procedure/Htseq/HumanVSMurine", annotated="~/Ian/Murine_FDP/REFERENCE/Mus_musculus.GRCm39.111.gtf")
 
 #============================================================================================================================#
 #                                                  AGAINST P6 GENOME                                                         #
 #============================================================================================================================#
 
-reference = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE_P6/p6_genome.fasta"
-MURINE_FILES = file_list("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples")
-HUMAN_FILES = file_list("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples")
-Mapping_Save_folder = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Mapping_p6_genome"
+reference = "~/Ian/Murine_FDP/REFERENCE_P6/p6_genome.fasta"
+MURINE_FILES = file_list("~/Ian/Murine_FDP/TrimmRes2/Murine_samples")
+HUMAN_FILES = file_list("~/Ian/Murine_FDP/TrimmRes2/Human_samples")
+Mapping_Save_folder = "~/Ian/Murine_FDP/Mapping_p6_genome"
 
-#run_HiSat2_build(input_Path= "/mnt/Viro_Data/Mitarbeiter/Leyla/HEV_PPH/Dataset/p6HEV_reference_genome", reference= reference, simple=True)
+#run_HiSat2_build(input_Path= "~/Leyla/HEV_PPH/Dataset/p6HEV_reference_genome", reference= reference, simple=True)
 
-Murine = run_HiSat2_v2(input_Path = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_p6", reference = reference)
+Murine = run_HiSat2_v2(input_Path = "~/Ian/Murine_FDP/TrimmRes2/Murine_samples", savepath = Mapping_Save_folder+"/Murine_p6", reference = reference)
 
-Human = run_HiSat2_v2(input_Path = "/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_p6", reference= reference)
+Human = run_HiSat2_v2(input_Path = "~/Ian/Murine_FDP/TrimmRes2/Human_samples", savepath= Mapping_Save_folder+"/Human_p6", reference= reference)
 
 PIC_Murine = run_Picard(input_Path= Mapping_Save_folder+"/Murine_p6" , savepath= Mapping_Save_folder+"/Murine_Picard_p6", rm= True, rm_seq_dup= False)
 PIC_Human = run_Picard(input_Path= Mapping_Save_folder+"/Human_p6" , savepath= Mapping_Save_folder+"/Human_Picard_p6", rm= True, rm_seq_dup= False)
 
-HTS_Murine =  run_Htseq(input_Path= PIC_Murine, savepath= Mapping_Save_folder+"/Murine_HTseq_p6", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE_P6/p6_genome.gff3")
-HTS_Human=  run_Htseq(input_Path= PIC_Human, savepath= Mapping_Save_folder+"/Human_HTseq_p6", annotated="/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/REFERENCE_P6/p6_genome.gff3")
+HTS_Murine =  run_Htseq(input_Path= PIC_Murine, savepath= Mapping_Save_folder+"/Murine_HTseq_p6", annotated="~/Ian/Murine_FDP/REFERENCE_P6/p6_genome.gff3")
+HTS_Human=  run_Htseq(input_Path= PIC_Human, savepath= Mapping_Save_folder+"/Human_HTseq_p6", annotated="~/Ian/Murine_FDP/REFERENCE_P6/p6_genome.gff3")
