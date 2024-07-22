@@ -4,6 +4,10 @@ output: html_document
 date: "2024-03-25"
 ---
 
+This is the source code for developing, all the packages inclued are NOT required but there are usefull if you want to combine with other pipelines.
+Inside there are few things but overalll it will print the coverage images in respect to p6 genome.
+
+
 ```{r setup, include=FALSE}
 library(readxl)
 library(DESeq2)
@@ -53,7 +57,7 @@ Gen_2_cols <- c("white", "#DC143C", "green")
 
 
 ```{r}
-setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Unmaped_Reads/Picard/Human/Coverage")
+setwd("~/Ian/Murine_FDP/Unmaped_Reads/Picard/Human/Coverage")
 
 New_counts <-list.files()
 
@@ -141,7 +145,7 @@ feature_12 <- ggplot() + geom_rect(data = Gen_2, aes(xmin = start, xmax = end, y
 
 
 ```{r}
-setwd("/mnt/Viro_Data/Mitarbeiter/Ian/Murine_FDP/Unmaped_Reads/Picard/Murine/Coverage")
+setwd("~/Ian/Murine_FDP/Unmaped_Reads/Picard/Murine/Coverage")
 
 New_counts <-list.files()
 
@@ -157,7 +161,7 @@ for (file in New_counts) {
   
 }
 
-
+#This is each line correspond to the coverage for each one of the samples, thje coilors are defined on a list in another call amd coords and Depth are teh actual ones that present how well are related.
 g22 <- ggplot() + 
   geom_line(data = ID_5_Murine, aes(x= Coordinates, y = Depth, color = "ID_5_Murine"), lwd = 0.7) +
   geom_line(data = ID_6_Murine, aes(x= Coordinates, y = Depth, color = "ID_6_Murine"), lwd = 0.7) + 
@@ -184,6 +188,7 @@ g22 <- ggplot() +
   geom_line(data = ID_35_Murine, aes(x= Coordinates, y = Depth, color = "ID_35_Murine"), lwd = 0.7) +
   geom_line(data = ID_36_Murine, aes(x= Coordinates, y = Depth, color = "ID_36_Murine"), lwd = 0.7) +
   theme_classic() + 
+#There I'm setting dow the different colors, are placed on HTML code or using the base colors from R language, it is importnat that the values it's a list due it will be using them in the previous calls for the colors. Another way would be placing them inside a  single lis beforehand and call all the values afterwards.
   scale_color_manual(name = "Sample", values = c("ID_5_Murine" = "#67e5c8",
                                                  "ID_6_Murine" = "pink",
                                                  "ID_7_Murine" = "limegreen",
@@ -211,6 +216,7 @@ g22 <- ggplot() +
   labs(title = "Coverage against p6 HEV genome - Murine data")
 
 
+#Add the bottom line text for showing the p6 mapping reference in order to match the contents of it with the coverage in specific places. 
 feature_11 <- ggplot() + geom_rect(data = Gen_1, aes(xmin = start, xmax = end, ymin =0, ymax = 1,
                            fill =feature, color = feature))+
   geom_text(data = Gen_1, aes(x=(start+end) / 2, y = 0.5, label = feature)) +
